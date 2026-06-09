@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Poll System</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #e5ddd5; padding: 20px; display: flex; gap: 20px; justify-content: center; }
+        .card { background: white; padding: 20px; border-radius: 8px; width: 350px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); height: fit-content; }
+        h3 { margin-top: 0; color: #075E54; }
+        input { display: block; width: 90%; padding: 8px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 10px; margin: 8px 0; border: none; border-radius: 5px; cursor: pointer; font-size: 15px; }
+        .btn-create { background: #075E54; color: white; }
+        .btn-add { background: #34B7F1; color: white; }
+        .btn-vote { background: #25D366; color: white; text-align: left; display: flex; justify-content: space-between; }
+        .btn-vote:hover { background: #128C7E; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h3>Create a New Poll</h3>
+        <input type="text" id="poll-question-input" placeholder="Type your question here...">
+        
+        <div id="dynamic-options-inputs">
+            <input type="text" class="option-input" placeholder="Option 1">
+            <input type="text" class="option-input" placeholder="Option 2">
+        </div>
+        
+        <button class="btn-add" id="add-option-btn">+ Add Another Option</button>
+        <button class="btn-create" id="submit-poll-btn">Launch Poll</button>
+    </div>
+
+    <div class="card">
+        <h3>Active Poll</h3>
+        <h2 id="display-question">No active poll right now. Create one on the left!</h2>
+        <div id="display-options"></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>

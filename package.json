@@ -1,0 +1,16 @@
+{
+  "name": "pollstream",
+  "version": "1.0.0",
+  "description": "Synchronized Polling System",
+  "license": "ISC",
+  "author": "Priya",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
+  }
+}
