@@ -1,28 +1,52 @@
 const socket = io();
 
-// HTML Elements for Creator Form
+// UI Elements
+const loginOverlay = document.getElementById('login-overlay');
+const adminPanel = document.getElementById('admin-panel');
+const userAvatarTag = document.getElementById('user-avatar-tag');
+const chatTitleText = document.getElementById('chat-title-text');
+
 const questionInput = document.getElementById('poll-question-input');
 const optionsInputsContainer = document.getElementById('dynamic-options-inputs');
 const addOptionBtn = document.getElementById('add-option-btn');
 const submitPollBtn = document.getElementById('submit-poll-btn');
 
-// HTML Elements for Active Poll Display
+const activePollBubble = document.getElementById('active-poll-bubble');
 const displayQuestion = document.getElementById('display-question');
 const displayOptionsContainer = document.getElementById('display-options');
 
-// --- 1. CREATING THE POLL (Frontend UI Magic) ---
+// App States
+let currentUserRole = null; // 'admin' or 'user'
+let myVote = null;
 
-// Click "+ Add Another Option" to spawn a new input text box
+// 1. LOGIN FUNCTION
+window.selectRole = (role) => {
+    currentUserRole = role;
+    
+    // Remove the login screen view
+    loginOverlay.style.display = "none";
+    
+    if (role === 'admin') {
+        adminPanel.style.display = "block"; // Show creation form
+        userAvatarTag.innerText = "A";
+        chatTitleText.innerText = "Coding Chat (Admin Mode)";
+    } else {
+        userAvatarTag.innerText = "U";
+        chatTitleText.innerText = "Coding Chat (User Mode)";
+    }
+};
+
+// 2. ADMIN ACTIONS (Adding form fields)
 addOptionBtn.onclick = () => {
-    const optionCount = optionsInputsContainer.getElementsByTagName('input').length + 1;
+    const inputs = optionsInputsContainer.getElementsByTagName('input');
     const newInput = document.createElement('input');
     newInput.type = 'text';
     newInput.className = 'option-input';
-    newInput.placeholder = `Option ${optionCount}`;
+    newInput.placeholder = `Option ${inputs.length + 1}`;
     optionsInputsContainer.appendChild(newInput);
 };
 
-// Click "Launch Poll" to gather text values and send them to backend
+// ADMIN ACTIONS (Publishing the poll configuration)
 submitPollBtn.onclick = () => {
     const question = questionInput.value.trim();
     const inputElements = document.getElementsByClassName('option-input');
@@ -39,10 +63,9 @@ submitPollBtn.onclick = () => {
         return;
     }
 
-    // Emit the custom question and options to the backend
     socket.emit('createPoll', { question: question, options: optionsArray });
-    
-    // Clear the creator inputs for next time
+    myVote = null;
+
     questionInput.value = "";
     optionsInputsContainer.innerHTML = `
         <input type="text" class="option-input" placeholder="Option 1">
@@ -50,28 +73,37 @@ submitPollBtn.onclick = () => {
     `;
 };
 
-// --- 2. RECEIVING AND RENDERING THE POLL (Real-Time) ---
-
-// Listen for updates from the server
+// 3. SHARED REAL-TIME RECEIVER (Both user and admin run this)
 socket.on('updatePoll', (pollData) => {
     if (!pollData) return;
 
-    // Display the question
+    activePollBubble.style.display = "block";
     displayQuestion.innerText = pollData.question;
     displayOptionsContainer.innerHTML = ''; 
 
-    // Calculate total votes to show percentages if you want later, 
-    // but for now let's just show counts
+    let totalVotes = 0;
+    for (const votes of Object.values(pollData.options)) {
+        totalVotes += votes;
+    }
+
     for (const [option, votes] of Object.entries(pollData.options)) {
-        const button = document.createElement('button');
-        button.className = 'btn-vote';
-        button.innerHTML = `<span>${option}</span> <strong>${votes} votes</strong>`;
+        const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+
+        const row = document.createElement('div');
+        row.className = `poll-option-row ${myVote === option ? 'voted' : ''}`;
         
-        // When someone clicks a live option button
-        button.onclick = () => {
+        row.innerHTML = `
+            <div class="progress-bar" style="width: ${percentage}%"></div>
+            <span class="option-text">${option}</span>
+            <span class="vote-count">${votes} votes (${percentage}%)</span>
+        `;
+        
+        // Event interaction logic
+        row.onclick = () => {
+            myVote = option;
             socket.emit('castVote', option);
         };
         
-        displayOptionsContainer.appendChild(button);
+        displayOptionsContainer.appendChild(row);
     }
 });

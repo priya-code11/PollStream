@@ -2,38 +2,280 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Poll System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Poll System</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #e5ddd5; padding: 20px; display: flex; gap: 20px; justify-content: center; }
-        .card { background: white; padding: 20px; border-radius: 8px; width: 350px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); height: fit-content; }
-        h3 { margin-top: 0; color: #075E54; }
-        input { display: block; width: 90%; padding: 8px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; }
-        button { width: 100%; padding: 10px; margin: 8px 0; border: none; border-radius: 5px; cursor: pointer; font-size: 15px; }
-        .btn-create { background: #075E54; color: white; }
-        .btn-add { background: #34B7F1; color: white; }
-        .btn-vote { background: #25D366; color: white; text-align: left; display: flex; justify-content: space-between; }
-        .btn-vote:hover { background: #128C7E; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+        }
+
+        body { 
+            background-color: #f0f2f5; 
+            display: flex; 
+            min-height: 100vh; 
+            padding: 40px; 
+            justify-content: center; 
+            align-items: center; 
+        }
+
+        /* ROLE SELECTOR OVERLAY */
+        #login-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(11, 20, 26, 0.85); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 100; 
+            backdrop-filter: blur(4px);
+        }
+        
+        .login-card { 
+            background: white; 
+            padding: 40px 30px; 
+            border-radius: 16px; 
+            text-align: center; 
+            box-shadow: 0 12px 32px rgba(0,0,0,0.15); 
+            width: 360px; 
+        }
+        
+        .login-card h2 { 
+            color: #008069; 
+            margin-bottom: 8px; 
+            font-size: 24px;
+        }
+
+        .login-card p {
+            color: #667781;
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+        
+        .btn-role { 
+            background: #008069; 
+            color: white; 
+            margin: 10px 0; 
+            border: none; 
+            padding: 14px; 
+            width: 100%; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            font-size: 15px; 
+            transition: background 0.2s;
+        }
+        .btn-role:hover { background: #006e5a; }
+        .btn-role.user-role { background: #54656f; }
+        .btn-role.user-role:hover { background: #414e56; }
+
+        /* MAIN SYSTEM WORKSPACE */
+        .workspace {
+            display: flex;
+            gap: 30px;
+            max-width: 950px;
+            width: 100%;
+            align-items: flex-start;
+        }
+
+        /* LEFT SIDE: CREATOR INTERFACE */
+        .creator-panel { 
+            background: white; 
+            flex: 1;
+            padding: 30px; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 16px rgba(0,0,0,0.04); 
+            display: none; /* Handled by selectRole in client.js */
+            flex-direction: column;
+            border-top: 5px solid #008069;
+        }
+        
+        .creator-panel h3 { 
+            color: #111b21; 
+            margin-bottom: 20px; 
+            font-size: 18px; 
+            font-weight: 600;
+        }
+        
+        input { 
+            width: 100%; 
+            padding: 12px 14px; 
+            margin-bottom: 12px; 
+            border: 1px solid #e1e9eb; 
+            border-radius: 8px; 
+            background-color: #f8f9fa; 
+            font-size: 14px; 
+            outline: none; 
+            transition: all 0.2s;
+        }
+        
+        input:focus { 
+            border-color: #00a884; 
+            background-color: white; 
+            box-shadow: 0 0 0 3px rgba(0, 168, 132, 0.15);
+        }
+        
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+        }
+        
+        .btn-add { 
+            background-color: #f0f2f5; 
+            color: #008069; 
+            margin-bottom: 20px;
+            border: 1px dashed #008069;
+        }
+        .btn-add:hover { background-color: #e8f7f4; }
+        
+        .btn-launch { background-color: #008069; color: white; }
+        .btn-launch:hover { background-color: #006e5a; }
+
+        /* RIGHT SIDE: LIVE DISPLAY TARGET */
+        .poll-display-container {
+            flex: 1.2;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            background: #008069;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .panel-header h3 {
+            font-size: 18px;
+            color: #111b21;
+            font-weight: 600;
+        }
+
+        /* DIRECT POLL COMPONENT */
+        .poll-bubble { 
+            width: 100%;
+        }
+        
+        .poll-title { font-size: 18px; font-weight: 600; color: #111b21; margin-bottom: 6px; line-height: 1.4; }
+        .poll-subtitle { font-size: 13px; color: #667781; margin-bottom: 20px; }
+
+        /* INTERACTIVE OPTIONS (Injected dynamically) */
+        .poll-option-row { 
+            position: relative; 
+            background: #f0f2f5; 
+            border-radius: 12px; 
+            padding: 14px 18px; 
+            margin-bottom: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            cursor: pointer; 
+            border: 1px solid transparent; 
+            overflow: hidden; 
+            user-select: none; 
+            transition: transform 0.1s, border-color 0.2s; 
+        }
+        
+        .poll-option-row:last-child { margin-bottom: 0; }
+        .poll-option-row:active { transform: scale(0.99); }
+        
+        /* State when clicked/voted */
+        .poll-option-row.voted { 
+            border-color: #00a884; 
+        }
+        
+        .poll-option-row.voted .progress-bar {
+            background-color: #d8f3ec; 
+        }
+        
+        /* Progress Bar Mask */
+        .progress-bar { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            bottom: 0; 
+            background-color: #e3e6ea; 
+            pointer-events: none; 
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 1; 
+        }
+        
+        .option-text { position: relative; z-index: 2; font-size: 15px; color: #111b21; font-weight: 500; }
+        .vote-count { position: relative; z-index: 2; font-size: 14px; color: #54656f; font-weight: 600; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h3>Create a New Poll</h3>
-        <input type="text" id="poll-question-input" placeholder="Type your question here...">
-        
-        <div id="dynamic-options-inputs">
-            <input type="text" class="option-input" placeholder="Option 1">
-            <input type="text" class="option-input" placeholder="Option 2">
+    <div id="login-overlay">
+        <div class="login-card">
+            <h2>Poll System Dashboard</h2>
+            <p>Select your interface access level</p>
+            <button class="btn-role" onclick="selectRole('admin')">🔐 Log in as Admin</button>
+            <button class="btn-role user-role" onclick="selectRole('user')">👤 Log in as Regular User</button>
         </div>
-        
-        <button class="btn-add" id="add-option-btn">+ Add Another Option</button>
-        <button class="btn-create" id="submit-poll-btn">Launch Poll</button>
     </div>
 
-    <div class="card">
-        <h3>Active Poll</h3>
-        <h2 id="display-question">No active poll right now. Create one on the left!</h2>
-        <div id="display-options"></div>
+    <div class="workspace">
+        
+        <div class="creator-panel" id="admin-panel">
+            <h3>⚡ Create Live Poll</h3>
+            <input type="text" id="poll-question-input" placeholder="Ask a question...">
+            
+            <div id="dynamic-options-inputs">
+                <input type="text" class="option-input" placeholder="Option 1">
+                <input type="text" class="option-input" placeholder="Option 2">
+            </div>
+            
+            <button class="btn-add" id="add-option-btn">+ Add option</button>
+            <button class="btn-launch" id="submit-poll-btn">Send Poll to Chat</button>
+        </div>
+
+        <div class="poll-display-container">
+            <div class="panel-header">
+                <div class="avatar" id="user-avatar-tag">?</div>
+                <h3 id="chat-title-text">Coding Chat</h3>
+            </div>
+
+            <div class="poll-bubble" id="active-poll-bubble" style="display: none;">
+                <div class="poll-title" id="display-question">Waiting for configuration...</div>
+                <div class="poll-subtitle">Select one option</div>
+                
+                <div id="display-options">
+                    </div>
+            </div>
+        </div>
+
     </div>
 
     <script src="/socket.io/socket.io.js"></script>

@@ -11,6 +11,8 @@ app.use(express.static('public'));
 // This will hold whatever poll a user creates
 let currentPoll = null;
 
+let votedUsers = new Set();
+
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
@@ -41,9 +43,16 @@ io.on('connection', (socket) => {
 
     // 2. Listen for when someone votes
     socket.on('castVote', (selectedOption) => {
+
+        if (votedUsers.has(socket.id)) {
+            // Tell ONLY this specific user that they can't vote again
+            socket.emit('voteError', 'You have already voted in this poll!');
+            return; // Stop the execution here!
+        }
+
         if (currentPoll && currentPoll.options[selectedOption] !== undefined) {
             currentPoll.options[selectedOption] += 1;
-            
+            votedUsers.add(socket.id);
             // Broadcast the updated vote counts to everyone
             io.emit('updatePoll', currentPoll);
         }
