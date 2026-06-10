@@ -1,12 +1,22 @@
+require('dotenv').config();
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const Person = require('./models/person')
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 
 const app = express();
+app.use(express.json());
+
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static('public'));
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log('Successfully connected to MongoDB.'))
+    .catch(err => console.error('Database connection error:', err));
 
 // This will hold whatever poll a user creates
 let currentPoll = null;
