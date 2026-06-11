@@ -1,4 +1,4 @@
-const socket = io();
+let socket;
 
 // UI Elements
 const loginOverlay = document.getElementById('login-overlay');
@@ -19,22 +19,138 @@ const displayOptionsContainer = document.getElementById('display-options');
 let currentUserRole = null; // 'admin' or 'user'
 let myVote = null;
 
-// 1. LOGIN FUNCTION
-window.selectRole = (role) => {
-    currentUserRole = role;
-    
-    // Remove the login screen view
-    loginOverlay.style.display = "none";
-    
-    if (role === 'admin') {
-        adminPanel.style.display = "block"; // Show creation form
-        userAvatarTag.innerText = "A";
-        chatTitleText.innerText = "Coding Chat (Admin Mode)";
-    } else {
-        userAvatarTag.innerText = "U";
-        chatTitleText.innerText = "Coding Chat (User Mode)";
+// NEW: AUTHENTICATED LOGIN DISPATCH ROUTE
+window.handleRegister = async (event) => {
+    event.preventDefault();
+
+    const name = document.getElementById('register-name').value.trim();
+    const phone_no = document.getElementById('register-phone_no').value.trim();
+    const password = document.getElementById('register-password').value;
+    const role = document.getElementById('register-role').value;
+
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone_no, password, role })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.message || "Registration validation failed.");
+            return;
+        }
+
+        alert("Account created successfully! Switching to Login view.");
+        
+        // Clear registration input data
+        event.target.reset();
+        
+        // Ensure this function exists globally in your helper code!
+        if (typeof toggleAuthCard === 'function') {
+            toggleAuthCard('login'); 
+        }
+
+    } catch (err) {
+        console.error(err);
+        alert("Error sending user configuration details.");
     }
 };
+
+window.handleLogin = async (event) => {
+    event.preventDefault();
+    const phone_no = document.getElementById('login-phone_no').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone_no, password })
+        });
+
+        // 1. CRITICAL FIX: Check if the network response failed FIRST
+        if (!response.ok) {
+            if (response.status === 401) {
+                alert("Login failed: Invalid phone number or password.");
+            } else {
+                // If it's a 400 or 500 error, try to get the text message safely
+                const errText = await response.text();
+                alert(`Authentication failed (${response.status}): ${errText}`);
+            }
+            return; // Stop execution here safely
+        }
+
+        // 2. SAFE TO PARSE: We now know the server sent back a 200 OK JSON token
+        const data = await response.json();
+
+        // Save our state values securely
+        currentUserRole = data.role;
+        loginOverlay.style.display = "none";
+
+        if (currentUserRole === 'admin') {
+            if (adminPanel) adminPanel.style.display = "block";
+            if (userAvatarTag) userAvatarTag.innerText = "A";
+            if (chatTitleText) chatTitleText.innerText = `${data.name} (Admin Mode)`;
+        } else {
+            if (adminPanel) adminPanel.style.display = "none"; // Hide admin tools for regular users
+            if (userAvatarTag) userAvatarTag.innerText = "U";
+            if (chatTitleText) chatTitleText.innerText = `${data.name} (User Mode)`;
+        }
+
+        // INITIALIZE LIVE SECURE REAL-TIME PIPELINE AFTER AUTHENTICATION
+        initRealtimeSocket(data.token);
+
+    } catch (err) {
+        console.error("Frontend Login Error:", err);
+        alert("Error establishing authorization handshake connection: " + err.message);
+    }
+};
+
+function initRealtimeSocket(authToken) {
+    // Pass JWT token validation string using options parameters
+    socket = io({
+        auth: { token: authToken }
+    });
+
+    // 3. SHARED REAL-TIME RECEIVER 
+    socket.on('updatePoll', (pollData) => {
+        if (!pollData) return;
+
+        activePollBubble.style.display = "block";
+        displayQuestion.innerText = pollData.question;
+        displayOptionsContainer.innerHTML = ''; 
+
+        let totalVotes = 0;
+        for (const votes of Object.values(pollData.options)) {
+            totalVotes += votes;
+        }
+
+        for (const [option, votes] of Object.entries(pollData.options)) {
+            const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+
+            const row = document.createElement('div');
+            row.className = `poll-option-row ${myVote === option ? 'voted' : ''}`;
+            
+            row.innerHTML = `
+                <div class="progress-bar" style="width: ${percentage}%"></div>
+                <span class="option-text">${option}</span>
+                <span class="vote-count">${votes} votes (${percentage}%)</span>
+            `;
+            
+            row.onclick = () => {
+                myVote = option;
+                socket.emit('castVote', option);
+            };
+            
+            displayOptionsContainer.appendChild(row);
+        }
+    });
+    socket.on('voteError', (errMsg) => {
+        alert(errMsg);
+    });
+}
 
 // 2. ADMIN ACTIONS (Adding form fields)
 addOptionBtn.onclick = () => {
@@ -47,7 +163,9 @@ addOptionBtn.onclick = () => {
 };
 
 // ADMIN ACTIONS (Publishing the poll configuration)
-submitPollBtn.onclick = () => {
+submitPollBtn.onclick = (event) => {
+    if (event) event.preventDefault();
+
     const question = questionInput.value.trim();
     const inputElements = document.getElementsByClassName('option-input');
     
@@ -63,6 +181,11 @@ submitPollBtn.onclick = () => {
         return;
     }
 
+    if (!socket) {
+        alert("Real-time engine disconnected. Please re-authenticate.");
+        return;
+    }
+
     socket.emit('createPoll', { question: question, options: optionsArray });
     myVote = null;
 
@@ -73,37 +196,3 @@ submitPollBtn.onclick = () => {
     `;
 };
 
-// 3. SHARED REAL-TIME RECEIVER (Both user and admin run this)
-socket.on('updatePoll', (pollData) => {
-    if (!pollData) return;
-
-    activePollBubble.style.display = "block";
-    displayQuestion.innerText = pollData.question;
-    displayOptionsContainer.innerHTML = ''; 
-
-    let totalVotes = 0;
-    for (const votes of Object.values(pollData.options)) {
-        totalVotes += votes;
-    }
-
-    for (const [option, votes] of Object.entries(pollData.options)) {
-        const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
-
-        const row = document.createElement('div');
-        row.className = `poll-option-row ${myVote === option ? 'voted' : ''}`;
-        
-        row.innerHTML = `
-            <div class="progress-bar" style="width: ${percentage}%"></div>
-            <span class="option-text">${option}</span>
-            <span class="vote-count">${votes} votes (${percentage}%)</span>
-        `;
-        
-        // Event interaction logic
-        row.onclick = () => {
-            myVote = option;
-            socket.emit('castVote', option);
-        };
-        
-        displayOptionsContainer.appendChild(row);
-    }
-});

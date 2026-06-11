@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
 
-const personSchema = new mongoose.SchemaType({
-    id:{
-        type: Number,
-        required: true,
-        unique: true
-    },
+const personSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -16,7 +11,7 @@ const personSchema = new mongoose.SchemaType({
         default: 'user'
     },
     phone_no:{
-        type: Number,
+        type: String,
         required: true,
         minlength: 10
     },
@@ -28,4 +23,4 @@ const personSchema = new mongoose.SchemaType({
 });
 
 const Person = mongoose.model('Person', personSchema);
-module.export= Person;
+module.exports= Person;

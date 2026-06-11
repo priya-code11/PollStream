@@ -21,7 +21,7 @@
             align-items: center; 
         }
 
-        /* ROLE SELECTOR OVERLAY */
+        /* ROLE SELECTOR & AUTH OVERLAY */
         #login-overlay { 
             position: fixed; 
             top: 0; 
@@ -36,31 +36,32 @@
             backdrop-filter: blur(4px);
         }
         
-        .login-card { 
+        .auth-card { 
             background: white; 
-            padding: 40px 30px; 
+            padding: 35px 30px; 
             border-radius: 16px; 
-            text-align: center; 
             box-shadow: 0 12px 32px rgba(0,0,0,0.15); 
-            width: 360px; 
+            width: 380px; 
         }
         
-        .login-card h2 { 
+        .auth-card h2 { 
             color: #008069; 
             margin-bottom: 8px; 
             font-size: 24px;
+            text-align: center;
         }
 
-        .login-card p {
+        .auth-card p {
             color: #667781;
             font-size: 14px;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
+            text-align: center;
         }
         
-        .btn-role { 
+        .btn-auth { 
             background: #008069; 
             color: white; 
-            margin: 10px 0; 
+            margin-top: 10px; 
             border: none; 
             padding: 14px; 
             width: 100%; 
@@ -70,9 +71,39 @@
             font-size: 15px; 
             transition: background 0.2s;
         }
-        .btn-role:hover { background: #006e5a; }
-        .btn-role.user-role { background: #54656f; }
-        .btn-role.user-role:hover { background: #414e56; }
+        .btn-auth:hover { background: #006e5a; }
+
+        .auth-toggle-text {
+            text-align: center;
+            font-size: 14px;
+            color: #54656f;
+            margin-top: 20px;
+        }
+
+        .auth-toggle-text span {
+            color: #00a884;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .auth-toggle-text span:hover {
+            text-decoration: underline;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            border: 1px solid #e1e9eb;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            font-size: 14px;
+            outline: none;
+            color: #111b21;
+        }
+        select:focus {
+            border-color: #00a884;
+            background-color: white;
+        }
 
         /* MAIN SYSTEM WORKSPACE */
         .workspace {
@@ -90,7 +121,7 @@
             padding: 30px; 
             border-radius: 16px; 
             box-shadow: 0 4px 16px rgba(0,0,0,0.04); 
-            display: none; /* Handled by selectRole in client.js */
+            display: none; 
             flex-direction: column;
             border-top: 5px solid #008069;
         }
@@ -190,7 +221,7 @@
         .poll-title { font-size: 18px; font-weight: 600; color: #111b21; margin-bottom: 6px; line-height: 1.4; }
         .poll-subtitle { font-size: 13px; color: #667781; margin-bottom: 20px; }
 
-        /* INTERACTIVE OPTIONS (Injected dynamically) */
+        /* INTERACTIVE OPTIONS */
         .poll-option-row { 
             position: relative; 
             background: #f0f2f5; 
@@ -210,7 +241,6 @@
         .poll-option-row:last-child { margin-bottom: 0; }
         .poll-option-row:active { transform: scale(0.99); }
         
-        /* State when clicked/voted */
         .poll-option-row.voted { 
             border-color: #00a884; 
         }
@@ -219,7 +249,6 @@
             background-color: #d8f3ec; 
         }
         
-        /* Progress Bar Mask */
         .progress-bar { 
             position: absolute; 
             top: 0; 
@@ -238,12 +267,44 @@
 <body>
 
     <div id="login-overlay">
-        <div class="login-card">
-            <h2>Poll System Dashboard</h2>
-            <p>Select your interface access level</p>
-            <button class="btn-role" onclick="selectRole('admin')">🔐 Log in as Admin</button>
-            <button class="btn-role user-role" onclick="selectRole('user')">👤 Log in as Regular User</button>
+        
+        <div class="auth-card" id="login-card">
+            <h2>Welcome Back</h2>
+            <p>Log in to access your dashboard</p>
+            
+            <form onsubmit="handleLogin(event)">
+                <input type="text" id="login-phone_no" placeholder="Phone Number" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="submit" class="btn-auth">🔒 Secure Login</button>
+            </form>
+            
+            <div class="auth-toggle-text">
+                Don't have an account? <span onclick="toggleAuthCard('register')">Register here</span>
+            </div>
         </div>
+
+        <div class="auth-card" id="register-card" style="display: none;">
+            <h2>Create Account</h2>
+            <p>Join the secure voting room ecosystem</p>
+            
+            <form onsubmit="handleRegister(event)">
+                <input type="text" id="register-name" placeholder="Full Name" required>
+                <input type="text" id="register-phone_no" placeholder="Phone Number (Min 10 digits)" required minlength="10">
+                <input type="password" id="register-password" placeholder="Password (Min 6 characters)" required minlength="6">
+                
+                <select id="register-role">
+                    <option value="user">Regular User (Voter)</option>
+                    <option value="admin">System Administrator</option>
+                </select>
+                
+                <button type="submit" class="btn-auth">📝 Create Account</button>
+            </form>
+            
+            <div class="auth-toggle-text">
+                Already registered? <span onclick="toggleAuthCard('login')">Log in instead</span>
+            </div>
+        </div>
+
     </div>
 
     <div class="workspace">
@@ -271,8 +332,7 @@
                 <div class="poll-title" id="display-question">Waiting for configuration...</div>
                 <div class="poll-subtitle">Select one option</div>
                 
-                <div id="display-options">
-                    </div>
+                <div id="display-options"></div>
             </div>
         </div>
 
@@ -280,5 +340,20 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
+    
+    <script>
+        function toggleAuthCard(view) {
+            const loginCard = document.getElementById('login-card');
+            const registerCard = document.getElementById('register-card');
+            
+            if (view === 'register') {
+                loginCard.style.display = 'none';
+                registerCard.style.display = 'block';
+            } else {
+                loginCard.style.display = 'block';
+                registerCard.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
