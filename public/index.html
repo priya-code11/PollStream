@@ -105,6 +105,22 @@
             background-color: white;
         }
 
+        /* NEW ROOM OPTIONS INTERFACES (POST LOGIN) */
+        .room-actions-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .btn-room-secondary {
+            background-color: #f0f2f5;
+            color: #111b21;
+            border: 1px solid #ccc;
+        }
+        .btn-room-secondary:hover {
+            background-color: #e3e6ea;
+        }
+
         /* MAIN SYSTEM WORKSPACE */
         .workspace {
             display: flex;
@@ -187,11 +203,17 @@
 
         .panel-header {
             display: flex;
-            align-items: center;
-            gap: 14px;
+            flex-direction: column;
+            gap: 6px;
             margin-bottom: 24px;
             padding-bottom: 16px;
             border-bottom: 1px solid #f0f2f5;
+        }
+
+        .header-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
         }
 
         .avatar {
@@ -211,6 +233,21 @@
             font-size: 18px;
             color: #111b21;
             font-weight: 600;
+        }
+
+        /* ROOM RUNTIME BADGE BAR */
+        .room-identifier-badge {
+            background-color: #e8f7f4;
+            color: #008069;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 6px;
+            align-self: flex-start;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(0, 128, 105, 0.15);
+            display: none; /* Display is enabled via JavaScript once active */
         }
 
         /* DIRECT POLL COMPONENT */
@@ -305,6 +342,26 @@
             </div>
         </div>
 
+        <div class="auth-card" id="admin-routing-card" style="display: none;">
+            <h2>Admin Hub</h2>
+            <p id="admin-welcome-msg">Select your session path</p>
+            
+            <div class="room-actions-group">
+                <button type="button" class="btn-auth" id="btn-reconnect-room" style="display: none;" onclick="triggerReconnectRoom()">🚪 Reconnect Active Room</button>
+                <button type="button" class="btn-auth btn-room-secondary" id="btn-create-fresh-room" onclick="triggerCreateRoom()">✨ Create New Room</button>
+            </div>
+        </div>
+
+        <div class="auth-card" id="user-routing-card" style="display: none;">
+            <h2>Join Room</h2>
+            <p>Enter an invitation code to target an active poll</p>
+            
+            <form onsubmit="triggerJoinRoom(event)">
+                <input type="text" id="target-room-id-input" placeholder="Enter Room ID (e.g., room_654321)" required>
+                <button type="submit" class="btn-auth">🚀 Enter Channel</button>
+            </form>
+        </div>
+
     </div>
 
     <div class="workspace">
@@ -324,8 +381,11 @@
 
         <div class="poll-display-container">
             <div class="panel-header">
-                <div class="avatar" id="user-avatar-tag">?</div>
-                <h3 id="chat-title-text">Coding Chat</h3>
+                <div class="header-meta-row">
+                    <div class="avatar" id="user-avatar-tag">?</div>
+                    <h3 id="chat-title-text">Coding Chat</h3>
+                </div>
+                <div class="room-identifier-badge" id="active-room-id-badge">ROOM ID: None</div>
             </div>
 
             <div class="poll-bubble" id="active-poll-bubble" style="display: none;">
@@ -342,16 +402,27 @@
     <script src="client.js"></script>
     
     <script>
+        // Manages interface card shifting rules inside the main access overlay
         function toggleAuthCard(view) {
             const loginCard = document.getElementById('login-card');
             const registerCard = document.getElementById('register-card');
+            const adminCard = document.getElementById('admin-routing-card');
+            const userCard = document.getElementById('user-routing-card');
+            
+            // Hide all variants
+            loginCard.style.display = 'none';
+            registerCard.style.display = 'none';
+            adminCard.style.display = 'none';
+            userCard.style.display = 'none';
             
             if (view === 'register') {
-                loginCard.style.display = 'none';
                 registerCard.style.display = 'block';
-            } else {
+            } else if (view === 'login') {
                 loginCard.style.display = 'block';
-                registerCard.style.display = 'none';
+            } else if (view === 'admin-hub') {
+                adminCard.style.display = 'block';
+            } else if (view === 'user-hub') {
+                userCard.style.display = 'block';
             }
         }
     </script>

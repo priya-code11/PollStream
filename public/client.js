@@ -14,12 +14,14 @@ const submitPollBtn = document.getElementById('submit-poll-btn');
 const activePollBubble = document.getElementById('active-poll-bubble');
 const displayQuestion = document.getElementById('display-question');
 const displayOptionsContainer = document.getElementById('display-options');
+const createRoom = document.getElementById("btn-create-fresh-room");
 
-// App States
-let currentUserRole = null; // 'admin' or 'user'
+let currentUserRole = null; 
 let myVote = null;
+let currentRoomId = null;
+let authToken = null;
 
-// NEW: AUTHENTICATED LOGIN DISPATCH ROUTE
+
 window.handleRegister = async (event) => {
     event.preventDefault();
 
@@ -87,28 +89,93 @@ window.handleLogin = async (event) => {
 
         // Save our state values securely
         currentUserRole = data.role;
-        loginOverlay.style.display = "none";
+        authToken = data.token;
+
+        // Setup Avatar Icon with the first letter of their name string
+        if (userAvatarTag) userAvatarTag.innerText = data.name.charAt(0).toUpperCase();
 
         if (currentUserRole === 'admin') {
-            if (adminPanel) adminPanel.style.display = "block";
-            if (userAvatarTag) userAvatarTag.innerText = "A";
-            if (chatTitleText) chatTitleText.innerText = `${data.name} (Admin Mode)`;
+            if (chatTitleText) chatTitleText.innerText = "Admin Control Room";
+            document.getElementById('admin-welcome-msg').innerText = `Welcome back, ${data.name}!`;
+            
+            // Check the backend memory map to see if an active room exists for this Admin
+            checkExistingAdminRoom(data.token);
         } else {
-            if (adminPanel) adminPanel.style.display = "none"; // Hide admin tools for regular users
-            if (userAvatarTag) userAvatarTag.innerText = "U";
-            if (chatTitleText) chatTitleText.innerText = `${data.name} (User Mode)`;
-        }
-
-        // INITIALIZE LIVE SECURE REAL-TIME PIPELINE AFTER AUTHENTICATION
-        initRealtimeSocket(data.token);
+            if (chatTitleText) chatTitleText.innerText = "Voter Room View";
+            // Regular user: Send straight to the "Enter Room ID" interface card
+            toggleAuthCard('user-hub');
+        }  
 
     } catch (err) {
         console.error("Frontend Login Error:", err);
-        alert("Error establishing authorization handshake connection: " + err.message);
+        alert("Error establishing authorization handshake connection: ");
     }
 };
+// NEW: Click dispatch hooks bound to your dynamic HTML overlay option buttons
+window.triggerCreateRoom = () => {
+    // We fetch a standard login handshake token stored during authentication processes
+    initRealtimeSocket(); 
+    socket.emit('createRoom');
+};
 
-function initRealtimeSocket(authToken) {
+
+async function checkExistingAdminRoom(token) {
+    try {
+        const response = await fetch('/api/admin/check-room', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+
+        if (data.hasActiveRoom) {
+            document.getElementById('btn-reconnect-room').style.display = 'block';
+            currentRoomId = data.roomId; // Pre-cache existing ID matching their account
+        } else {
+            document.getElementById('btn-reconnect-room').style.display = 'none';
+        }
+        toggleAuthCard('admin-hub');
+    } catch (err) {
+        toggleAuthCard('admin-hub');
+    }
+}
+
+// NEW: Combined utility to hide overlay structures and flash room info text layout
+function displayWorkspace(role, roomId) {
+    loginOverlay.style.display = "none";
+    
+    const badge = document.getElementById('active-room-id-badge');
+    if (badge) {
+        badge.innerText = `ROOM ID: ${roomId}`;
+        badge.style.display = 'block';
+    }
+
+    if (role === 'admin') {
+        if (adminPanel) adminPanel.style.display = "flex";
+    } else {
+        if (adminPanel) adminPanel.style.display = "none";
+    }
+}
+
+window.triggerReconnectRoom = () => {
+    initRealtimeSocket();
+    socket.emit('joinRoom', currentRoomId);
+    displayWorkspace('admin', currentRoomId);
+};
+
+window.triggerJoinRoom = (event) => {
+    event.preventDefault();
+    const roomId = document.getElementById('target-room-id-input').value.trim();
+    if (!roomId) return;
+
+    currentRoomId = roomId;
+    initRealtimeSocket();
+    socket.emit('joinRoom', roomId);
+};
+
+function initRealtimeSocket() {
+    // Ensure we don't build duplicate socket instances
+    if (socket) return; 
+
     // Pass JWT token validation string using options parameters
     socket = io({
         auth: { token: authToken }
@@ -116,7 +183,15 @@ function initRealtimeSocket(authToken) {
 
     // 3. SHARED REAL-TIME RECEIVER 
     socket.on('updatePoll', (pollData) => {
-        if (!pollData) return;
+        // Show the user workspace if they are a regular voter arriving for the first time
+        if (currentUserRole !== 'admin' && loginOverlay.style.display !== 'none') {
+            displayWorkspace('user', currentRoomId);
+        }
+
+        if (!pollData) {
+            activePollBubble.style.display = "none";
+            return;
+        }
 
         activePollBubble.style.display = "block";
         displayQuestion.innerText = pollData.question;
@@ -140,8 +215,13 @@ function initRealtimeSocket(authToken) {
             `;
             
             row.onclick = () => {
+                if (currentUserRole === 'admin') {
+                    alert("Administrators cannot vote inside their own rooms.");
+                    return;
+                }
                 myVote = option;
-                socket.emit('castVote', option);
+                // CHANGED: Package target room identification container with payload metrics
+                socket.emit('castVote', { roomId: currentRoomId, selectedOption: option });
             };
             
             displayOptionsContainer.appendChild(row);
@@ -149,6 +229,11 @@ function initRealtimeSocket(authToken) {
     });
     socket.on('voteError', (errMsg) => {
         alert(errMsg);
+    });
+    // Fired by server layers exclusively to confirmation pipeline signals
+    socket.on('roomStateUpdate', (data) => {
+        currentRoomId = data.roomId;
+        displayWorkspace('admin', currentRoomId);
     });
 }
 
@@ -186,7 +271,11 @@ submitPollBtn.onclick = (event) => {
         return;
     }
 
-    socket.emit('createPoll', { question: question, options: optionsArray });
+    socket.emit('createPoll', { 
+        roomId: currentRoomId, 
+        question: question, 
+        options: optionsArray 
+    });
     myVote = null;
 
     questionInput.value = "";
