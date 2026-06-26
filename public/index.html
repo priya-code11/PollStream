@@ -9,14 +9,15 @@
             box-sizing: border-box; 
             margin: 0; 
             padding: 0; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
         }
 
         body { 
-            background-color: #f0f2f5; 
+            background-color: #0b0f19; 
+            color: #f3f4f6;
             display: flex; 
             min-height: 100vh; 
-            padding: 40px; 
+            padding: 40px 20px; 
             justify-content: center; 
             align-items: center; 
         }
@@ -28,60 +29,72 @@
             left: 0; 
             width: 100%; 
             height: 100%; 
-            background: rgba(11, 20, 26, 0.85); 
+            background: rgba(3, 7, 18, 0.85); 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             z-index: 100; 
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(8px);
         }
         
         .auth-card { 
-            background: white; 
-            padding: 35px 30px; 
-            border-radius: 16px; 
-            box-shadow: 0 12px 32px rgba(0,0,0,0.15); 
-            width: 380px; 
+            background: #111827; 
+            padding: 40px 32px; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2); 
+            width: 100%;
+            max-width: 400px; 
+            border: 1px solid #1f2937;
         }
         
         .auth-card h2 { 
-            color: #008069; 
+            color: #f3f4f6; 
             margin-bottom: 8px; 
-            font-size: 24px;
+            font-size: 26px;
             text-align: center;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }
 
         .auth-card p {
-            color: #667781;
+            color: #9ca3af;
             font-size: 14px;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
             text-align: center;
         }
         
         .btn-auth { 
-            background: #008069; 
+            background: #3b82f6; 
             color: white; 
-            margin-top: 10px; 
+            margin-top: 12px; 
             border: none; 
             padding: 14px; 
             width: 100%; 
-            border-radius: 8px; 
+            border-radius: 10px; 
             font-weight: 600; 
             cursor: pointer; 
             font-size: 15px; 
-            transition: background 0.2s;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
         }
-        .btn-auth:hover { background: #006e5a; }
+        .btn-auth:hover { 
+            background: #2563eb; 
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px -2px rgba(59, 130, 246, 0.3);
+        }
+        .btn-auth:active {
+            transform: translateY(0);
+        }
 
         .auth-toggle-text {
             text-align: center;
             font-size: 14px;
-            color: #54656f;
-            margin-top: 20px;
+            color: #9ca3af;
+            margin-top: 24px;
         }
 
         .auth-toggle-text span {
-            color: #00a884;
+            color: #60a5fa;
             cursor: pointer;
             font-weight: 600;
         }
@@ -92,20 +105,22 @@
         select {
             width: 100%;
             padding: 12px 14px;
-            margin-bottom: 12px;
-            border: 1px solid #e1e9eb;
-            border-radius: 8px;
-            background-color: #f8f9fa;
+            margin-bottom: 16px;
+            border: 1px solid #374151;
+            border-radius: 10px;
+            background-color: #1f2937;
             font-size: 14px;
             outline: none;
-            color: #111b21;
+            color: #f3f4f6;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
         select:focus {
-            border-color: #00a884;
-            background-color: white;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
-        /* NEW ROOM OPTIONS INTERFACES (POST LOGIN) */
+        /* ROOM OPTIONS */
         .room-actions-group {
             display: flex;
             flex-direction: column;
@@ -113,101 +128,109 @@
             margin-top: 15px;
         }
         .btn-room-secondary {
-            background-color: #f0f2f5;
-            color: #111b21;
-            border: 1px solid #ccc;
+            background-color: #1f2937;
+            color: #f3f4f6;
+            border: 1px solid #374151;
+            box-shadow: none;
         }
         .btn-room-secondary:hover {
-            background-color: #e3e6ea;
+            background-color: #2d3748;
+            box-shadow: none;
         }
 
         /* MAIN SYSTEM WORKSPACE */
         .workspace {
             display: flex;
-            gap: 30px;
-            max-width: 950px;
+            gap: 32px;
+            max-width: 1000px;
             width: 100%;
             align-items: flex-start;
         }
 
         /* LEFT SIDE: CREATOR INTERFACE */
         .creator-panel { 
-            background: white; 
+            background: #111827; 
             flex: 1;
-            padding: 30px; 
-            border-radius: 16px; 
-            box-shadow: 0 4px 16px rgba(0,0,0,0.04); 
+            padding: 32px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2); 
             display: none; 
             flex-direction: column;
-            border-top: 5px solid #008069;
+            border: 1px solid #1f2937;
+            border-top: 5px solid #3b82f6;
         }
         
         .creator-panel h3 { 
-            color: #111b21; 
-            margin-bottom: 20px; 
-            font-size: 18px; 
-            font-weight: 600;
+            color: #f3f4f6; 
+            margin-bottom: 24px; 
+            font-size: 20px; 
+            font-weight: 700;
+            letter-spacing: -0.3px;
         }
         
         input { 
             width: 100%; 
-            padding: 12px 14px; 
-            margin-bottom: 12px; 
-            border: 1px solid #e1e9eb; 
-            border-radius: 8px; 
-            background-color: #f8f9fa; 
+            padding: 12px 16px; 
+            margin-bottom: 14px; 
+            border: 1px solid #374151; 
+            border-radius: 10px; 
+            background-color: #1f2937; 
             font-size: 14px; 
             outline: none; 
-            transition: all 0.2s;
+            color: #f3f4f6;
+            transition: all 0.2s ease;
         }
         
         input:focus { 
-            border-color: #00a884; 
-            background-color: white; 
-            box-shadow: 0 0 0 3px rgba(0, 168, 132, 0.15);
+            border-color: #3b82f6; 
+            background-color: #1f2937; 
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
         
         button { 
             width: 100%; 
-            padding: 12px; 
+            padding: 14px; 
             border: none; 
-            border-radius: 8px; 
+            border-radius: 10px; 
             font-size: 14px; 
             font-weight: 600; 
             cursor: pointer; 
-            transition: all 0.2s; 
+            transition: all 0.2s ease; 
         }
         
         .btn-add { 
-            background-color: #f0f2f5; 
-            color: #008069; 
-            margin-bottom: 20px;
-            border: 1px dashed #008069;
+            background-color: transparent; 
+            color: #60a5fa; 
+            margin-bottom: 24px;
+            border: 1px dashed #3b82f6;
         }
-        .btn-add:hover { background-color: #e8f7f4; }
+        .btn-add:hover { 
+            background-color: rgba(59, 130, 246, 0.08); 
+        }
         
-        .btn-launch { background-color: #008069; color: white; }
-        .btn-launch:hover { background-color: #006e5a; }
+        .btn-launch { background-color: #3b82f6; color: white; }
+        .btn-launch:hover { background-color: #2563eb; }
 
         /* RIGHT SIDE: LIVE DISPLAY TARGET */
         .poll-display-container {
             flex: 1.2;
-            background: white;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-            min-height: 280px;
+            background: #111827;
+            padding: 32px;
+            border-radius: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            min-height: 320px;
             display: flex;
             flex-direction: column;
+            border: 1px solid #1f2937;
         }
 
         .panel-header {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #f0f2f5;
+            gap: 10px;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #1f2937;
         }
 
         .header-meta-row {
@@ -217,37 +240,43 @@
         }
 
         .avatar {
-            width: 36px;
-            height: 36px;
-            background: #008069;
+            width: 40px;
+            height: 40px;
+            background: #3b82f6;
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 18px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
         }
 
         .panel-header h3 {
-            font-size: 18px;
-            color: #111b21;
-            font-weight: 600;
+            font-size: 20px;
+            color: #f3f4f6;
+            font-weight: 700;
         }
 
         /* ROOM RUNTIME BADGE BAR */
         .room-identifier-badge {
-            background-color: #e8f7f4;
-            color: #008069;
-            font-size: 13px;
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+            font-size: 12px;
             font-weight: 700;
-            padding: 6px 12px;
-            border-radius: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
             align-self: flex-start;
             margin-top: 4px;
             letter-spacing: 0.5px;
-            border: 1px solid rgba(0, 128, 105, 0.15);
-            display: none; /* Display is enabled via JavaScript once active */
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            display: none;
+            transition: all 0.2s ease;
+        }
+        .room-identifier-badge:hover {
+            background-color: rgba(59, 130, 246, 0.18);
+            border-color: #3b82f6;
         }
 
         /* DIRECT POLL COMPONENT */
@@ -255,35 +284,39 @@
             width: 100%;
         }
         
-        .poll-title { font-size: 18px; font-weight: 600; color: #111b21; margin-bottom: 6px; line-height: 1.4; }
-        .poll-subtitle { font-size: 13px; color: #667781; margin-bottom: 20px; }
+        .poll-title { font-size: 20px; font-weight: 700; color: #f3f4f6; margin-bottom: 8px; line-height: 1.4; }
+        .poll-subtitle { font-size: 13px; color: #9ca3af; margin-bottom: 24px; }
 
         /* INTERACTIVE OPTIONS */
         .poll-option-row { 
             position: relative; 
-            background: #f0f2f5; 
+            background: #1f2937; 
             border-radius: 12px; 
-            padding: 14px 18px; 
-            margin-bottom: 10px; 
+            padding: 16px 20px; 
+            margin-bottom: 12px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             cursor: pointer; 
-            border: 1px solid transparent; 
+            border: 1px solid #374151; 
             overflow: hidden; 
             user-select: none; 
-            transition: transform 0.1s, border-color 0.2s; 
+            transition: all 0.2s ease;
         }
         
         .poll-option-row:last-child { margin-bottom: 0; }
+        .poll-option-row:hover { 
+            border-color: #4b5563;
+            transform: scale(1.01);
+        }
         .poll-option-row:active { transform: scale(0.99); }
         
         .poll-option-row.voted { 
-            border-color: #00a884; 
+            border-color: #3b82f6; 
         }
         
         .poll-option-row.voted .progress-bar {
-            background-color: #d8f3ec; 
+            background-color: rgba(59, 130, 246, 0.15); 
         }
         
         .progress-bar { 
@@ -291,20 +324,31 @@
             top: 0; 
             left: 0; 
             bottom: 0; 
-            background-color: #e3e6ea; 
+            background-color: rgba(255, 255, 255, 0.03); 
             pointer-events: none; 
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
             z-index: 1; 
         }
         
-        .option-text { position: relative; z-index: 2; font-size: 15px; color: #111b21; font-weight: 500; }
-        .vote-count { position: relative; z-index: 2; font-size: 14px; color: #54656f; font-weight: 600; }
+        .option-text { position: relative; z-index: 2; font-size: 15px; color: #f3f4f6; font-weight: 600; }
+        .vote-count { position: relative; z-index: 2; font-size: 14px; color: #60a5fa; font-weight: 700; }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 768px) {
+            body { padding: 20px 12px; }
+            .workspace {
+                flex-direction: column;
+                gap: 24px;
+            }
+            .creator-panel, .poll-display-container {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div id="login-overlay">
-        
         <div class="auth-card" id="login-card">
             <h2>Welcome Back</h2>
             <p>Log in to access your dashboard</p>
@@ -361,11 +405,9 @@
                 <button type="submit" class="btn-auth">🚀 Enter Channel</button>
             </form>
         </div>
-
     </div>
 
     <div class="workspace">
-        
         <div class="creator-panel" id="admin-panel">
             <h3>⚡ Create Live Poll</h3>
             <input type="text" id="poll-question-input" placeholder="Ask a question...">
@@ -385,7 +427,7 @@
                     <div class="avatar" id="user-avatar-tag">?</div>
                     <h3 id="chat-title-text">Coding Chat</h3>
                 </div>
-                <div class="room-identifier-badge" id="active-room-id-badge">ROOM ID: None</div>
+                <div class="room-identifier-badge" id="active-room-id-badge" style="cursor: pointer;" title="Click to copy invite link">ROOM ID: None</div>
             </div>
 
             <div class="poll-bubble" id="active-poll-bubble" style="display: none;">
@@ -395,21 +437,18 @@
                 <div id="display-options"></div>
             </div>
         </div>
-
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
     
     <script>
-        // Manages interface card shifting rules inside the main access overlay
         function toggleAuthCard(view) {
             const loginCard = document.getElementById('login-card');
             const registerCard = document.getElementById('register-card');
             const adminCard = document.getElementById('admin-routing-card');
             const userCard = document.getElementById('user-routing-card');
             
-            // Hide all variants
             loginCard.style.display = 'none';
             registerCard.style.display = 'none';
             adminCard.style.display = 'none';

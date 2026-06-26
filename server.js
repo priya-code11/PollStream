@@ -37,6 +37,11 @@ mongoose.connect(process.env.MONGO_URI)
 // }
 let liveRooms = {};
 
+// GET: Catch-all route for the root directory to handle query strings seamlessly
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.post('/api/register', async (req, res) => {
     try {
         const { name, role, phone_no, password } = req.body;
@@ -78,14 +83,21 @@ app.post('/api/login', passport.authenticate('local', { session: false }), (req,
     res.json({ token, role: req.user.role, name: req.user.name });
 });
 
-app.get('/api/admin/check-room', passport.authenticate('local', { session: false }), (req, res) => {
-    const expectedRoomId = `room_${req.user._id}`;
-    
-    if (liveRooms[expectedRoomId]) {
-        return res.json({ hasActiveRoom: true, roomId: expectedRoomId });
+app.get('/api/admin/check-room', 
+    passport.authenticate('', { session: false }), 
+    (req, res) => {
+        const expectedRoomId = `room_${req.user._id}`;
+        
+        // Safety check to ensure the liveRooms object exists
+        if (typeof liveRooms !== 'undefined' && liveRooms[expectedRoomId]) {
+            return res.json({ 
+                hasActiveRoom: true, 
+                roomId: expectedRoomId 
+            });
+        }
+        res.json({ hasActiveRoom: false });
     }
-    res.json({ hasActiveRoom: false });
-});
+);
 
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
